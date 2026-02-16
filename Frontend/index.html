@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Todo App</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+        }
+
+        .box {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>✅ Todo App Frontend</h2>
+
+<!-- Register -->
+<div class="box">
+    <h3>Register</h3>
+
+    <input id="ruser" placeholder="Username">
+    <input id="rpass" type="password" placeholder="Password">
+
+    <button onclick="register()">Register</button>
+</div>
+
+<!-- Login -->
+<div class="box">
+    <h3>Login</h3>
+
+    <input id="luser" placeholder="Username">
+    <input id="lpass" type="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+
+    <p id="tokenBox"></p>
+</div>
+
+<!-- Create Task -->
+<div class="box">
+    <h3>Create Task</h3>
+
+    <input id="task" placeholder="Task name">
+    <input id="priority" placeholder="Priority">
+    <input id="status" placeholder="Status">
+
+    <button onclick="addTask()">Add Task</button>
+</div>
+
+<!-- Show Tasks -->
+<div class="box">
+    <h3>My Tasks</h3>
+
+    <button onclick="getTasks()">Load Tasks</button>
+
+    <ul id="taskList"></ul>
+</div>
+
+
+<script>
+
+let token = localStorage.getItem("token") || "";
+
+/* ---------------- Register ---------------- */
+
+function register() {
+
+    fetch("http://127.0.0.1:5000/api/register", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+            username: ruser.value,
+            password: rpass.value
+        })
+    })
+
+    .then(res => res.json())
+    .then(data => alert(JSON.stringify(data)))
+}
+
+
+/* ---------------- Login ---------------- */
+
+function login() {
+
+    fetch("http://127.0.0.1:5000/api/login", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+            username: luser.value,
+            password: lpass.value
+        })
+    })
+
+    .then(res => res.json())
+    .then(data => {
+
+        localStorage.setItem("token", data.token);
+
+        token = data.token;
+
+        tokenBox.innerText = "Token Saved ✅";
+
+        alert("Login Successful");
+    })
+}
+
+
+/* ---------------- Add Task ---------------- */
+
+function addTask() {
+
+    fetch("http://127.0.0.1:5000/api/tasks", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+
+        body: JSON.stringify({
+            task: task.value,
+            priority: priority.value,
+            status: status.value
+        })
+    })
+
+    .then(res => res.json())
+    .then(data => alert("Task Added ✅"))
+}
+
+
+/* ---------------- Get Tasks ---------------- */
+
+function getTasks() {
+
+    console.log("Token:", token);
+
+    fetch("http://127.0.0.1:5000/api/tasks", {
+
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    })
+
+    .then(res => {
+        console.log("Status:", res.status);
+        return res.json();
+    })
+
+    .then(data => {
+
+        console.log("Data:", data);
+
+        taskList.innerHTML = "";
+
+        if (data.length === 0) {
+            alert("No tasks found!");
+        }
+
+        data.forEach(t => {
+
+            let li = document.createElement("li");
+
+            li.innerText = t.task + " (" + t.status + ")";
+
+            taskList.appendChild(li);
+        })
+    })
+}
+
+</script>
+
+</body>
+</html>
